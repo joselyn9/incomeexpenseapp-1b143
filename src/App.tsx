@@ -1,29 +1,29 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Entries from '@/components/Entries';
 import Dashboard from '@/components/Dashboard';
 import Settings from '@/components/Settings';
-import { useDarkMode } from 'usehooks-ts';
 
 const App: React.FC = () => {
-  const { isDarkMode } = useDarkMode({
-    defaultValue: localStorage.getItem('theme') === 'dark',
-    onChange: (isDark) => {
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
-      document.documentElement.classList.toggle('dark', isDark);
-    },
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) return savedTheme === 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
-  // Ensure initial theme is applied
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDarkMode);
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
   }, [isDarkMode]);
+
+  // Allow Navbar to toggle theme
+  const toggleTheme = () => setIsDarkMode((prev) => !prev);
 
   return (
     <Router>
-      <div className={isDarkMode ? 'dark' : ''}>
-        <Navbar />
+      <div>
+        <Navbar toggleTheme={toggleTheme} isDarkMode={isDarkMode} />
         <Routes>
           <Route path="/entries" element={<Entries />} />
           <Route path="/dashboard" element={<Dashboard />} />

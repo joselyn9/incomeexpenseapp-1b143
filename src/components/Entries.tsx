@@ -619,16 +619,16 @@ const Entries: React.FC = () => {
   // Function to determine row color based on renewDateReminder
   const getRowColor = (entry: Entry) => {
     if (entry.renewDateReminder === 0) return '';
-    const today = new Date('2025-05-21');
+    const today = new Date();
     const renewDate = new Date(entry.renewDate);
     const daysUntilRenew = differenceInDays(renewDate, today);
     if (daysUntilRenew <= entry.renewDateReminder) {
-      if (daysUntilRenew <= 5) {
-        return 'bg-red-100 dark:bg-red-900/20';
-      } else if (daysUntilRenew <= 10) {
-        return 'bg-yellow-100 dark:bg-yellow-900/20';
-      } else if (daysUntilRenew <= 15) {
-        return 'bg-green-100 dark:bg-green-900/20';
+      if (daysUntilRenew < 0) {
+        return 'bg-red-100 dark:bg-red-600/20'; // Past Due
+      } else if (daysUntilRenew === 0) {
+        return 'bg-orange-100 dark:bg-orange-600/20'; // Due
+      } else {
+        return 'bg-yellow-100 dark:bg-yellow-600/20'; // Approaching
       }
     }
     return '';
@@ -1068,7 +1068,7 @@ const Entries: React.FC = () => {
               </TableHeader>
               <TableBody>
                 {paginatedEntries.map((entry) => (
-                  <TableRow key={entry.id} className={cn(getRowColor(entry))}>
+                  <TableRow key={entry.id} className={cn(getRowColor(entry), 'transition-none')}>
                     <TableCell className="truncate max-w-40">
                       <TooltipProvider>
                         <Tooltip>

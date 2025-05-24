@@ -705,10 +705,11 @@ const Dashboard: React.FC = () => {
                           key={entry.id}
                           className={cn(
                             entry.status === 'Past Due'
-                              ? 'bg-red-100'
+                              ? 'bg-red-100 dark:bg-red-600/20'
                               : entry.status === 'Due'
-                              ? 'bg-orange-100'
-                              : 'bg-yellow-100'
+                              ? 'bg-orange-100 dark:bg-orange-600/20'
+                              : 'bg-yellow-100 dark:bg-yellow-600/20',
+                            'transition-none'
                           )}
                         >
                           <TableCell>{entry.name}</TableCell>

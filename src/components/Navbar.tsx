@@ -1,81 +1,25 @@
-import { useState, useEffect } from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Sun, Moon } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
+import { Settings, Sun, Moon } from 'lucide-react';
 
-const Navbar: React.FC = () => {
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    // Initialize based on localStorage or system preference
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      return savedTheme === 'dark';
-    }
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
+interface NavbarProps {
+  toggleTheme: () => void;
+  isDarkMode: boolean;
+}
 
-  useEffect(() => {
-    // Apply theme on mount and update
-    const root = document.documentElement;
-    if (isDarkMode) {
-      root.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      root.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDarkMode]);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((prev) => !prev);
-  };
-
+const Navbar: React.FC<NavbarProps> = ({ toggleTheme, isDarkMode }) => {
   return (
-    <nav className="bg-primary text-primary-foreground p-4 shadow-md">
-      <div className="max-w-4xl mx-auto flex justify-between items-center">
-        <Link to="/" className="text-xl font-bold">
-          Finance Tracker
+    <nav className="bg-gray-800 p-4 flex justify-between">
+      <div>
+        <Link to="/entries" className="text-white mr-4">Entries</Link>
+        <Link to="/dashboard" className="text-white mr-4">Dashboard</Link>
+      </div>
+      <div className="flex items-center">
+        <Link to="/settings" className="text-white mr-4">
+          <Settings size={24} />
         </Link>
-        <div className="flex items-center space-x-4">
-          <NavLink
-            to="/dashboard"
-            className={({ isActive }) =>
-              cn('hover:underline', isActive ? 'font-semibold underline' : '')
-            }
-          >
-            Dashboard
-          </NavLink>
-          <NavLink
-            to="/"
-            className={({ isActive }) =>
-              cn('hover:underline', isActive ? 'font-semibold underline' : '')
-            }
-          >
-            Entries
-          </NavLink>
-          <NavLink
-            to="/settings"
-            className={({ isActive }) =>
-              cn('hover:underline', isActive ? 'font-semibold underline' : '')
-            }
-          >
-            Settings
-          </NavLink>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleDarkMode}
-            aria-label={
-              isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'
-            }
-          >
-            {isDarkMode ? (
-              <Sun className="h-5 w-5" />
-            ) : (
-              <Moon className="h-5 w-5" />
-            )}
-          </Button>
-        </div>
+        <button onClick={toggleTheme} className="text-white">
+          {isDarkMode ? <Sun size={24} /> : <Moon size={24} />}
+        </button>
       </div>
     </nav>
   );
