@@ -868,7 +868,7 @@ const Entries: React.FC = () => {
                       currency: 'USD',
                       style: 'currency',
                     })
-                  : totals.income.amount.toLocaleString('en-IN', {
+                  : totals.expense.amount.toLocaleString('en-IN', {
                       ...(currency === 'INR' && {
                         currency: 'INR',
                         style: 'currency',
