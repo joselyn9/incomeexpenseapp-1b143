@@ -251,6 +251,7 @@ const Settings: React.FC = () => {
             ? Number(row.renewDateReminder)
             : 0,
           property: row.property || '',
+          notes: row.notes || '',
         };
 
         if (!updatedProperties.has(entry.property) && entry.property) {

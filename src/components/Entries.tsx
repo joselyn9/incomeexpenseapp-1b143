@@ -86,6 +86,7 @@ interface Entry {
   renewDate: string;
   renewDateReminder: 0 | 5 | 10 | 15;
   property: string;
+  notes: string | null;
 }
 
 interface SettingsData {
@@ -125,6 +126,7 @@ const entrySchema = z.object({
     z.literal(15),
   ]),
   property: z.string().min(1, 'Property is required'),
+  notes: z.string().nullable().optional(),
 });
 
 type EntryFormData = z.infer<typeof entrySchema>;
@@ -156,8 +158,8 @@ const Entries: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const notificationsEnabled =
-    localStorage.getItem('notificationsEnabled') !== 'false';
-  const currency = localStorage.getItem('currency') || 'none';
+    typeof window !== 'undefined' && localStorage.getItem('notificationsEnabled') !== 'false';
+  const currency = typeof window !== 'undefined' ? localStorage.getItem('currency') || 'none' : 'none';
 
   const {
     register,
@@ -178,6 +180,7 @@ const Entries: React.FC = () => {
       renewDate: format(new Date(), 'yyyy-MM-dd'),
       renewDateReminder: 0,
       property: '',
+      notes: null,
     },
   });
 
@@ -246,16 +249,17 @@ const Entries: React.FC = () => {
               ? Number(data.renewDateReminder)
               : 0,
             property: data.property || '',
+            notes: typeof data.notes === 'string' ? data.notes : null,
           } as Entry;
         });
         console.log('Entries.tsx: Fetched entries:', fetchedEntries);
-        setEntries(fetchedEntries);
         snapshot.docChanges().forEach((change) => {
           console.log(
             `Entries.tsx: Snapshot change - Type: ${change.type}, ID: ${change.doc.id}, Data:`,
             change.doc.data()
           );
         });
+        setEntries(fetchedEntries);
         if (
           editingEntry &&
           !fetchedEntries.find((e) => e.id === editingEntry.id)
@@ -293,7 +297,7 @@ const Entries: React.FC = () => {
         // Global search
         const matchesSearch = searchTerm
           ? Object.values(entry).some((value) =>
-              value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+              value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
             )
           : true;
 
@@ -335,6 +339,10 @@ const Entries: React.FC = () => {
           filterConfig.property !== 'All'
             ? entry.property === filterConfig.property
             : true;
+        const matchesNotes =
+            filterConfig.notes !== 'All'
+              ? entry.notes === filterConfig.notes
+              : true;
 
         return (
           matchesSearch &&
@@ -344,7 +352,8 @@ const Entries: React.FC = () => {
           matchesCategory &&
           matchesAmount &&
           matchesDate &&
-          matchesProperty
+          matchesProperty &&
+          matchesNotes
         );
       })
       .sort((a, b) => {
@@ -361,8 +370,8 @@ const Entries: React.FC = () => {
             : b.amount - a.amount;
         }
         return sortConfig.direction === 'asc'
-          ? String(aValue).localeCompare(String(bValue))
-          : String(bValue).localeCompare(String(aValue));
+          ? String(aValue ?? '').localeCompare(String(bValue ?? ''))
+          : String(bValue ?? '').localeCompare(String(aValue ?? ''));
       });
   }, [entries, searchTerm, filterConfig, sortConfig]);
 
@@ -432,7 +441,7 @@ const Entries: React.FC = () => {
         rangeWithDots.push('...');
       }
       rangeWithDots.push(page);
-      prevPage = page;
+      prevPage = page as number;
     }
 
     return rangeWithDots;
@@ -504,6 +513,7 @@ const Entries: React.FC = () => {
     setValue('renewDate', entry.renewDate);
     setValue('renewDateReminder', entry.renewDateReminder);
     setValue('property', entry.property);
+    setValue('notes', entry.notes);
     setIsDialogOpen(true);
   };
 
@@ -518,6 +528,7 @@ const Entries: React.FC = () => {
     setValue('renewDate', format(addDays(new Date(), 30), 'yyyy-MM-dd'));
     setValue('renewDateReminder', entry.renewDateReminder);
     setValue('property', entry.property);
+    setValue('notes', entry.notes);
     setIsDialogOpen(true);
   };
 
@@ -579,6 +590,7 @@ const Entries: React.FC = () => {
       .replace('{{renewDate}}', entry.renewDate)
       .replace('{{renewDateReminder}}', entry.renewDateReminder.toString())
       .replace('{{property}}', entry.property)
+      .replace('{{notes}}', entry.notes ?? '')
       .replace(
         '{{currency}}',
         currency === 'INR' ? '₹' : currency === 'USD' ? '$' : ''
@@ -612,6 +624,7 @@ const Entries: React.FC = () => {
       renewDate: format(new Date(), 'yyyy-MM-dd'),
       renewDateReminder: 0,
       property: settings?.properties[0] || '',
+      notes: null,
     });
     setIsDialogOpen(true);
   };
@@ -900,6 +913,7 @@ const Entries: React.FC = () => {
                 <TableHead>Renew Date</TableHead>
                 <TableHead>Reminder</TableHead>
                 <TableHead>Property</TableHead>
+                <TableHead className="w-40">Notes</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -935,6 +949,9 @@ const Entries: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <div className="h-4 bg-gray-200 rounded animate-pulse w-12" />
+                  </TableCell>
+                  <TableCell>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse" />
                   </TableCell>
                   <TableCell>
                     <div className="h-4 bg-gray-200 rounded animate-pulse" />
@@ -1063,6 +1080,14 @@ const Entries: React.FC = () => {
                     {sortConfig.key === 'property' &&
                       (sortConfig.direction === 'asc' ? '↑' : '↓')}
                   </TableHead>
+                  <TableHead
+                    onClick={() => handleSort('notes')}
+                    className="cursor-pointer w-40"
+                  >
+                    Notes{' '}
+                    {sortConfig.key === 'notes' &&
+                      (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -1140,6 +1165,20 @@ const Entries: React.FC = () => {
                     <TableCell>{entry.renewDate}</TableCell>
                     <TableCell>{entry.renewDateReminder} days</TableCell>
                     <TableCell>{entry.property}</TableCell>
+                    <TableCell className="truncate max-w-40">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            {entry.notes && entry.notes.length > 20
+                              ? entry.notes.substring(0, 20) + '...'
+                              : entry.notes || '-'}
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-1 rounded shadow-md">
+                            <p>{entry.notes || '-'}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
                         <TooltipProvider>
@@ -1435,6 +1474,13 @@ const Entries: React.FC = () => {
                   <p className="text-red-600 text-sm">
                     {errors.property.message}
                   </p>
+                )}
+              </div>
+              <div className="sm:col-span-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea id="notes" {...register('notes')} />
+                {errors.notes && (
+                  <p className="text-red-600 text-sm">{errors.notes.message}</p>
                 )}
               </div>
             </div>

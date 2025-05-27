@@ -321,6 +321,7 @@ const Dashboard: React.FC = () => {
         `"${entry.renewDate}"`,
         `"${entry.renewDateReminder}"`,
         `"${entry.property}"`,
+        `"${entry.notes}"`,
       ].join(',')
     );
 

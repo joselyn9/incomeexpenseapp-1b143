@@ -22,6 +22,7 @@ interface Entry {
   renewDate: string;
   renewDateReminder: 0 | 5 | 10 | 15;
   property: string;
+  notes: string;
 }
 
 interface SettingsData {
