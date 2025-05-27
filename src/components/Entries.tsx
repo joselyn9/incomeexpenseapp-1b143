@@ -107,6 +107,7 @@ interface FilterConfig {
   dateStart: string;
   dateEnd: string;
   property: string;
+  notes: string;
 }
 
 const entrySchema = z.object({
@@ -147,6 +148,7 @@ const Entries: React.FC = () => {
     dateStart: '',
     dateEnd: '',
     property: 'All',
+    notes: 'All',
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sortConfig, setSortConfig] = useState<{
@@ -339,10 +341,10 @@ const Entries: React.FC = () => {
           filterConfig.property !== 'All'
             ? entry.property === filterConfig.property
             : true;
-        const matchesNotes =
-            filterConfig.notes !== 'All'
-              ? entry.notes === filterConfig.notes
-              : true;
+            const matchesNotes =
+          filterConfig.notes !== 'All'
+            ? entry.notes === filterConfig.notes
+            : true;
 
         return (
           matchesSearch &&
@@ -465,6 +467,7 @@ const Entries: React.FC = () => {
       dateStart: '',
       dateEnd: '',
       property: 'All',
+      notes: '',
     });
     setSearchTerm('');
   };
@@ -813,6 +816,28 @@ const Entries: React.FC = () => {
                   >
                     <SelectTrigger id="filter-property">
                       <SelectValue placeholder="Select property" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="All">All</SelectItem>
+                      {settings?.properties.map((prop) => (
+                        <SelectItem key={prop} value={prop}>
+                          {prop}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="filter-notes">Notes</Label>
+                  <Select
+                    value={filterConfig.notes}
+                    onValueChange={(value) =>
+                      handleFilterChange('notes', value)
+                    }
+                    disabled={!settings}
+                  >
+                    <SelectTrigger id="filter-notes">
+                      <SelectValue placeholder="Select notes" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="All">All</SelectItem>

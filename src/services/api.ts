@@ -61,6 +61,7 @@ export const getEntries = async (): Promise<Entry[]> => {
           ? Number(data.renewDateReminder)
           : 0,
         property: data.property || '',
+        notes: data.notes || '',
       } as Entry;
     });
     console.log('api.ts: Fetched entries:', entries);
