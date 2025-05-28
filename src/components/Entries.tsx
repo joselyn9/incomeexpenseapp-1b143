@@ -115,7 +115,14 @@ const entrySchema = z.object({
   contact: z.string().min(1, 'Contact is required'),
   type: z.enum(['Income', 'Expense']),
   category: z.string().min(1, 'Category is required'),
-  amount: z.number().min(0, 'Amount must be non-negative'),
+  amount: z
+    .string()
+    .transform((val) => (val === '' ? undefined : Number(val)))
+    .refine((val) => val !== undefined, { message: 'Amount is required' })
+    .refine((val) => typeof val === 'number' && val >= 0, {
+      message: 'Amount must be non-negative',
+    })
+    .pipe(z.number()),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format'),
   renewDate: z
     .string()
@@ -148,7 +155,7 @@ const Entries: React.FC = () => {
     dateStart: '',
     dateEnd: '',
     property: 'All',
-    notes: 'All',
+    notes: '',
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sortConfig, setSortConfig] = useState<{
@@ -177,7 +184,7 @@ const Entries: React.FC = () => {
       contact: '',
       type: 'Income',
       category: '',
-      amount: 0,
+      amount: undefined,
       date: format(new Date(), 'yyyy-MM-dd'),
       renewDate: format(new Date(), 'yyyy-MM-dd'),
       renewDateReminder: 0,
@@ -187,6 +194,13 @@ const Entries: React.FC = () => {
   });
 
   const entryType = watch('type');
+
+  // Handle clearing amount on focus if it's 0
+  const handleAmountFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (e.target.value === '0') {
+      e.target.value = '';
+    }
+  };
 
   // Set default category and property when type changes
   useEffect(() => {
@@ -299,8 +313,8 @@ const Entries: React.FC = () => {
         // Global search
         const matchesSearch = searchTerm
           ? Object.values(entry).some((value) =>
-              value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-            )
+            value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+          )
           : true;
 
         // Field-specific filters
@@ -341,10 +355,9 @@ const Entries: React.FC = () => {
           filterConfig.property !== 'All'
             ? entry.property === filterConfig.property
             : true;
-            const matchesNotes =
-          filterConfig.notes !== 'All'
-            ? entry.notes === filterConfig.notes
-            : true;
+        const matchesNotes = filterConfig.notes
+          ? entry.notes?.toLowerCase().includes(filterConfig.notes.toLowerCase())
+          : true;
 
         return (
           matchesSearch &&
@@ -611,7 +624,18 @@ const Entries: React.FC = () => {
 
   const handleCancel = () => {
     setIsDialogOpen(false);
-    reset();
+    reset({
+      name: '',
+      contact: '',
+      type: 'Income',
+      category: '',
+      amount: undefined,
+      date: format(new Date(), 'yyyy-MM-dd'),
+      renewDate: format(new Date(), 'yyyy-MM-dd'),
+      renewDateReminder: 0,
+      property: '',
+      notes: null,
+    });
     setEditingEntry(null);
   };
 
@@ -622,7 +646,7 @@ const Entries: React.FC = () => {
       contact: '',
       type: 'Income',
       category: settings?.incomeCategories[0] || '',
-      amount: 0,
+      amount: undefined,
       date: format(new Date(), 'yyyy-MM-dd'),
       renewDate: format(new Date(), 'yyyy-MM-dd'),
       renewDateReminder: 0,
@@ -829,25 +853,12 @@ const Entries: React.FC = () => {
                 </div>
                 <div>
                   <Label htmlFor="filter-notes">Notes</Label>
-                  <Select
+                  <Input
+                    id="filter-notes"
                     value={filterConfig.notes}
-                    onValueChange={(value) =>
-                      handleFilterChange('notes', value)
-                    }
-                    disabled={!settings}
-                  >
-                    <SelectTrigger id="filter-notes">
-                      <SelectValue placeholder="Select notes" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="All">All</SelectItem>
-                      {settings?.properties.map((prop) => (
-                        <SelectItem key={prop} value={prop}>
-                          {prop}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onChange={(e) => handleFilterChange('notes', e.target.value)}
+                    placeholder="Filter by notes"
+                  />
                 </div>
               </div>
               <div className="mt-4 flex justify-end">
@@ -1303,7 +1314,7 @@ const Entries: React.FC = () => {
                 <ChevronLeft className="h-4 w-4" />
                 Previous
               </Button>
-              {getPaginationRange().map((item, index) =>
+              {getPaginationRange().map((item, index) => (
                 typeof item === 'string' ? (
                   <span
                     key={`ellipsis-${index}`}
@@ -1322,7 +1333,7 @@ const Entries: React.FC = () => {
                     {item}
                   </Button>
                 )
-              )}
+              ))}
               <Button
                 variant="outline"
                 size="sm"
@@ -1358,8 +1369,7 @@ const Entries: React.FC = () => {
                 <Input id="contact" {...register('contact')} />
                 {errors.contact && (
                   <p className="text-red-600 text-sm">
-                    {errors.contact.message}
-                  </p>
+                    {errors.contact.message}</p>
                 )}
               </div>
               <div>
@@ -1396,8 +1406,8 @@ const Entries: React.FC = () => {
                     {settings ? (
                       (entryType === 'Income'
                         ? settings.incomeCategories
-                        : settings.expenseCategories
-                      ).map((cat) => (
+                        : settings.expenseCategories)
+                      .map((cat) => (
                         <SelectItem key={cat} value={cat}>
                           {cat}
                         </SelectItem>
@@ -1420,7 +1430,8 @@ const Entries: React.FC = () => {
                 <Input
                   id="amount"
                   type="number"
-                  {...register('amount', { valueAsNumber: true })}
+                  {...register('amount')}
+                  onFocus={handleAmountFocus}
                 />
                 {errors.amount && (
                   <p className="text-red-600 text-sm">
