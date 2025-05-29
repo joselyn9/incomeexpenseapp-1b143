@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -117,12 +118,11 @@ const entrySchema = z.object({
   category: z.string().min(1, 'Category is required'),
   amount: z
     .string()
-    .transform((val) => (val === '' ? undefined : Number(val)))
-    .refine((val) => val !== undefined, { message: 'Amount is required' })
-    .refine((val) => typeof val === 'number' && val >= 0, {
-      message: 'Amount must be non-negative',
-    })
-    .pipe(z.number()),
+    .min(1, 'Amount is required')
+    .transform((val) => Number(val))
+    .refine((val) => !isNaN(val) && val >= 0, {
+      message: 'Amount must be a non-negative number',
+    }),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format'),
   renewDate: z
     .string()
@@ -184,7 +184,7 @@ const Entries: React.FC = () => {
       contact: '',
       type: 'Income',
       category: '',
-      amount: undefined,
+      amount: '',
       date: format(new Date(), 'yyyy-MM-dd'),
       renewDate: format(new Date(), 'yyyy-MM-dd'),
       renewDateReminder: 0,
@@ -524,7 +524,7 @@ const Entries: React.FC = () => {
     setValue('contact', entry.contact);
     setValue('type', entry.type);
     setValue('category', entry.category);
-    setValue('amount', entry.amount);
+    setValue('amount', entry.amount.toString());
     setValue('date', entry.date);
     setValue('renewDate', entry.renewDate);
     setValue('renewDateReminder', entry.renewDateReminder);
@@ -539,7 +539,7 @@ const Entries: React.FC = () => {
     setValue('contact', entry.contact);
     setValue('type', entry.type);
     setValue('category', entry.category);
-    setValue('amount', entry.amount);
+    setValue('amount', entry.amount.toString());
     setValue('date', format(new Date(), 'yyyy-MM-dd'));
     setValue('renewDate', format(addDays(new Date(), 30), 'yyyy-MM-dd'));
     setValue('renewDateReminder', entry.renewDateReminder);
@@ -629,7 +629,7 @@ const Entries: React.FC = () => {
       contact: '',
       type: 'Income',
       category: '',
-      amount: undefined,
+      amount: '',
       date: format(new Date(), 'yyyy-MM-dd'),
       renewDate: format(new Date(), 'yyyy-MM-dd'),
       renewDateReminder: 0,
@@ -646,7 +646,7 @@ const Entries: React.FC = () => {
       contact: '',
       type: 'Income',
       category: settings?.incomeCategories[0] || '',
-      amount: undefined,
+      amount: '',
       date: format(new Date(), 'yyyy-MM-dd'),
       renewDate: format(new Date(), 'yyyy-MM-dd'),
       renewDateReminder: 0,
@@ -814,8 +814,7 @@ const Entries: React.FC = () => {
                     type="date"
                     value={filterConfig.dateStart}
                     onChange={(e) =>
-                      handleFilterChange('dateStart', e.target.value)
-                    }
+                      handleFilterChange('dateStart', e.target.value)}
                   />
                 </div>
                 <div>
@@ -825,8 +824,7 @@ const Entries: React.FC = () => {
                     type="date"
                     value={filterConfig.dateEnd}
                     onChange={(e) =>
-                      handleFilterChange('dateEnd', e.target.value)
-                    }
+                      handleFilterChange('dateEnd', e.target.value)}
                   />
                 </div>
                 <div>
@@ -834,8 +832,7 @@ const Entries: React.FC = () => {
                   <Select
                     value={filterConfig.property}
                     onValueChange={(value) =>
-                      handleFilterChange('property', value)
-                    }
+                      handleFilterChange('property', value)}
                     disabled={!settings}
                   >
                     <SelectTrigger id="filter-property">
@@ -912,8 +909,8 @@ const Entries: React.FC = () => {
                 )}
               >
                 Expense ={' '}
-                {currency === 'USD'
-                  ? totals.expense.amount.toLocaleString('en-US', {
+                {currency === 'USD' ?
+                  totals.expense.amount.toLocaleString('en-US', {
                       currency: 'USD',
                       style: 'currency',
                     })
@@ -955,344 +952,343 @@ const Entries: React.FC = () => {
             </TableHeader>
             <TableBody>
               {[...Array(5)].map((_, index) => (
-                <TableRow key={index}>
-                  <TableCell>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse w-16" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse w-20" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse w-24" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse w-16" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse w-24" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse w-12" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      {[...Array(4)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="h-8 w-8 bg-gray-200 rounded animate-pulse"
-                        />
-                      ))}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      ) : filteredEntries.length === 0 ? (
-        <Card className="p-6 text-center">
-          <CardHeader>
-            <PlusCircle className="h-12 w-12 mx-auto text-muted-foreground" />
-            <CardTitle className="mt-4">
-              {searchTerm || Object.values(filterConfig).some((v) => v)
-                ? 'No entries match your filters'
-                : 'No entries found'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              {searchTerm || Object.values(filterConfig).some((v) => v)
-                ? 'Try adjusting your filters or add a new entry.'
-                : 'Get started by adding your first entry!'}
-            </p>
-            <Button onClick={handleAddEntry} disabled={isLoading}>
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Add Entry
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead
-                    onClick={() => handleSort('name')}
-                    className="cursor-pointer w-40"
-                  >
-                    Name{' '}
-                    {sortConfig.key === 'name' &&
-                      (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </TableHead>
-                  <TableHead
-                    onClick={() => handleSort('contact')}
-                    className="cursor-pointer w-40"
-                  >
-                    Contact{' '}
-                    {sortConfig.key === 'contact' &&
-                      (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </TableHead>
-                  <TableHead
-                    onClick={() => handleSort('type')}
-                    className="cursor-pointer"
-                  >
-                    Type{' '}
-                    {sortConfig.key === 'type' &&
-                      (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </TableHead>
-                  <TableHead
-                    onClick={() => handleSort('category')}
-                    className="cursor-pointer"
-                  >
-                    Category{' '}
-                    {sortConfig.key === 'category' &&
-                      (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </TableHead>
-                  <TableHead
-                    onClick={() => handleSort('amount')}
-                    className="cursor-pointer"
-                  >
-                    Amount{' '}
-                    {sortConfig.key === 'amount' &&
-                      (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </TableHead>
-                  <TableHead className="w-40">Amount in Words</TableHead>
-                  <TableHead
-                    onClick={() => handleSort('date')}
-                    className="cursor-pointer"
-                  >
-                    Date{' '}
-                    {sortConfig.key === 'date' &&
-                      (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </TableHead>
-                  <TableHead
-                    onClick={() => handleSort('monthYear')}
-                    className="cursor-pointer"
-                  >
-                    Month-Year{' '}
-                    {sortConfig.key === 'monthYear' &&
-                      (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </TableHead>
-                  <TableHead
-                    onClick={() => handleSort('renewDate')}
-                    className="cursor-pointer"
-                  >
-                    Renew Date{' '}
-                    {sortConfig.key === 'renewDate' &&
-                      (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </TableHead>
-                  <TableHead
-                    onClick={() => handleSort('renewDateReminder')}
-                    className="cursor-pointer"
-                  >
-                    Reminder{' '}
-                    {sortConfig.key === 'renewDateReminder' &&
-                      (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </TableHead>
-                  <TableHead
-                    onClick={() => handleSort('property')}
-                    className="cursor-pointer"
-                  >
-                    Property{' '}
-                    {sortConfig.key === 'property' &&
-                      (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </TableHead>
-                  <TableHead
-                    onClick={() => handleSort('notes')}
-                    className="cursor-pointer w-40"
-                  >
-                    Notes{' '}
-                    {sortConfig.key === 'notes' &&
-                      (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedEntries.map((entry) => (
-                  <TableRow key={entry.id} className={cn(getRowColor(entry), 'transition-none')}>
-                    <TableCell className="truncate max-w-40">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            {entry.name.length > 20
-                              ? entry.name.substring(0, 20) + '...'
-                              : entry.name}
-                          </TooltipTrigger>
-                          <TooltipContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-1 rounded shadow-md">
-                            <p>{entry.name}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </TableCell>
-                    <TableCell className="truncate max-w-40">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            {entry.contact.length > 20
-                              ? entry.contact.substring(0, 20) + '...'
-                              : entry.contact}
-                          </TooltipTrigger>
-                          <TooltipContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-1 rounded shadow-md">
-                            <p>{entry.contact}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </TableCell>
-                    <TableCell
-                      className={cn(
-                        entry.type === 'Income'
-                          ? 'text-green-600'
-                          : 'text-red-600'
-                      )}
-                    >
-                      {entry.type}
-                    </TableCell>
-                    <TableCell>{entry.category}</TableCell>
+                  <TableRow key={index}>
                     <TableCell>
-                      {currency === 'USD'
-                        ? entry.amount.toLocaleString('en-US', {
-                            currency: 'USD',
-                            style: 'currency',
-                          })
-                        : entry.amount.toLocaleString('en-IN', {
-                            ...(currency === 'INR' && {
-                              currency: 'INR',
-                              style: 'currency',
-                            }),
-                          })}
+                      <div className="h-4 bg-gray-200 rounded animate-pulse" />
                     </TableCell>
-                    <TableCell className="truncate max-w-40">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            {numberToWordsIndian(entry.amount).substring(0, 20)}
-                            ...
-                          </TooltipTrigger>
-                          <TooltipContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-1 rounded shadow-md">
-                            <p>{numberToWordsIndian(entry.amount)}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </TableCell>
-                    <TableCell>{entry.date}</TableCell>
                     <TableCell>
-                      {format(new Date(entry.date), 'MMM-yyyy')}
+                      <div className="h-4 bg-gray-200 rounded animate-pulse" />
                     </TableCell>
-                    <TableCell>{entry.renewDate}</TableCell>
-                    <TableCell>{entry.renewDateReminder} days</TableCell>
-                    <TableCell>{entry.property}</TableCell>
-                    <TableCell className="truncate max-w-40">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            {entry.notes && entry.notes.length > 20
-                              ? entry.notes.substring(0, 20) + '...'
-                              : entry.notes || '-'}
-                          </TooltipTrigger>
-                          <TooltipContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-1 rounded shadow-md">
-                            <p>{entry.notes || '-'}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                    <TableCell>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-12" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse" />
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDuplicate(entry)}
-                                disabled={isLoading || isDeleting === entry.id}
-                              >
-                                <Copy className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-1 rounded shadow-md">
-                              <p>Duplicate</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => generatePDF(entry)}
-                                disabled={isLoading || isDeleting === entry.id}
-                              >
-                                <Download className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-1 rounded shadow-md">
-                              <p>Generate PDF</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        <TooltipProvider delayDuration={0}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEdit(entry)}
-                                disabled={isLoading || isDeleting === entry.id}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-1 rounded shadow-md">
-                              <p>Edit</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDelete(entry.id)}
-                                disabled={isLoading || isDeleting === entry.id}
-                              >
-                                {isDeleting === entry.id ? (
-                                  <div className="animate-spin h-4 w-4 border-2 border-t-transparent border-gray-500 rounded-full" />
-                                ) : (
-                                  <Trash className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-1 rounded shadow-md">
-                              <p>Delete</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        {[...Array(4)].map((_, i) => (
+                          <div
+                            key={i}
+                            className="h-8 w-8 bg-gray-200 rounded animate-pulse"
+                          />
+                        ))}
                       </div>
                     </TableCell>
                   </TableRow>
                 ))}
+            </TableBody>
+          </Table>
+        </div>
+      ) : filteredEntries.length === 0 ? (
+          <Card className="p-6 text-center">
+            <CardHeader>
+              <PlusCircle className="h-12 w-12 mx-auto text-muted-foreground" />
+              <CardTitle className="mt-4">
+                {searchTerm || Object.values(filterConfig).some((value) => value)
+                  ? 'No entries match your filters'
+                  : 'No entries found'}
+              </CardTitle>
+            </CardHeader>
+              <CardContent><p className="text-muted-foreground mb-4">
+                {searchTerm || Object.values(filterConfig).some((v) => v)
+                  ? 'Try adjusting your filters or add a new entry.'
+                  : 'Get started by adding your first entry!'}
+              </p>
+              <Button onClick={handleAddEntry} disabled={isLoading}>
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Add Entry
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead
+                      onClick={() => handleSort('name')}
+                      className="cursor-pointer w-40"
+                    >
+                      Name{' '}
+                      {sortConfig.key === 'name' &&
+                      (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </TableHead>
+                    <TableHead
+                      onClick={() => handleSort('contact')}
+                      className="cursor-pointer w-40"
+                    >
+                      Contact{' '}
+                      {sortConfig.key === 'contact' &&
+                        (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </TableHead>
+                    <TableHead
+                      onClick={() => handleSort('type')}
+                      className="cursor-pointer"
+                    >
+                      Type{' '}
+                      {sortConfig.key === 'type' &&
+                        (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </TableHead>
+                    <TableHead
+                      onClick={() => handleSort('category')}
+                      className="cursor-pointer"
+                    >
+                      Category{' '}
+                      {sortConfig.key === 'category' &&
+                        (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </TableHead>
+                    <TableHead
+                      onClick={() => handleSort('amount')}
+                      className="cursor-pointer"
+                    >
+                      Amount{' '}
+                      {sortConfig.key === 'amount' &&
+                        (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </TableHead>
+                    <TableHead className="w-40">Amount in Words</TableHead>
+                    <TableHead
+                      onClick={() => handleSort('date')}
+                      className="cursor-pointer"
+                    >
+                      Date{' '}
+                      {sortConfig.key === 'date' &&
+                        (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </TableHead>
+                    <TableHead
+                      onClick={() => handleSort('monthYear')}
+                      className="cursor-pointer"
+                    >
+                      Month-Year{' '}
+                      {sortConfig.key === 'monthYear' &&
+                        (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </TableHead>
+                    <TableHead
+                      onClick={() => handleSort('renewDate')}
+                      className="cursor-pointer"
+                    >
+                      Renew Date{' '}
+                      {sortConfig.key === 'renewDate' &&
+                        (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </TableHead>
+                    <TableHead
+                      onClick={() => handleSort('renewDateReminder')}
+                      className="cursor-pointer"
+                    >
+                      Reminder{' '}
+                      {sortConfig.key === 'renewDateReminder' &&
+                        (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </TableHead>
+                    <TableHead
+                      onClick={() => handleSort('property')}
+                      className="cursor-pointer"
+                    >
+                      Property{' '}
+                      {sortConfig.key === 'property' &&
+                        (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </TableHead>
+                    <TableHead
+                      onClick={() => handleSort('notes')}
+                      className="cursor-pointer w-14"
+                    >
+                      Notes{' '}
+                      {sortConfig.key === 'notes' &&
+                        (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedEntries.map((entry) => (
+                    <TableRow key={entry.id} className={cn(getRowColor(entry), 'transition-none')}>
+                      <TableCell className="truncate max-w-40">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              {entry.name.length > 20
+                                ? entry.name.substring(0, 20) + '...'
+                                : entry.name}
+                            </TooltipTrigger>
+                            <TooltipContent className="tooltip-content">
+                              <p>{entry.name}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </TableCell>
+                      <TableCell className="truncate max-w-40">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              {entry.contact.length > 20
+                                ? entry.contact.substring(0, 20) + '...'
+                                : entry.contact}
+                            </TooltipTrigger>
+                            <TooltipContent className="tooltip-content">
+                              <p>{entry.contact}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </TableCell>
+                      <TableCell
+                        className={cn(
+                          entry.type === 'Income'
+                            ? 'text-green-600'
+                            : 'text-red-600'
+                        )}
+                      >
+                        {entry.type}
+                      </TableCell>
+                      <TableCell>{entry.category}</TableCell>
+                      <TableCell>
+                        {currency === 'USD' ? (
+                          entry.amount.toLocaleString('en-US', {
+                            currency: 'USD',
+                            style: 'currency',
+                          })
+                        ) : entry.amount.toLocaleString('en-IN', {
+                          ...(currency === 'INR' && {
+                            currency: 'INR',
+                            style: 'currency',
+                          }),
+                        })}
+                      </TableCell>
+                      <TableCell className="truncate max-w-40">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              {numberToWordsIndian(entry.amount).substring(0, 20)}
+                              ...
+                            </TooltipTrigger>
+                            <TooltipContent className="tooltip-content">
+                              <p>{numberToWordsIndian(entry.amount)}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </TableCell>
+                      <TableCell>{entry.date}</TableCell>
+                      <TableCell>
+                        {format(new Date(entry.date), 'MMM-yyyy')}
+                      </TableCell>
+                      <TableCell>{entry.renewDate}</TableCell>
+                      <TableCell>{entry.renewDateReminder} days</TableCell>
+                      <TableCell>{entry.property}</TableCell>
+                      <TableCell className="truncate max-w-40">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              {entry.notes && entry.notes.length > 20
+                                ? entry.notes.substring(0, 20) + '...'
+                                : entry.notes || '-'}
+                            </TooltipTrigger>
+                            <TooltipContent className="tooltip-content">
+                              <p>{entry.notes || '-'}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleDuplicate(entry)}
+                                  disabled={isLoading || isDeleting === entry.id}
+                                >
+                                  <Copy className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent className="tooltip-content">
+                                <p>Duplicate</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => generatePDF(entry)}
+                                  disabled={isLoading || isDeleting === entry.id}
+                                >
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent className="tooltip-content">
+                                <p>Generate PDF</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          <TooltipProvider delayDuration={0}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleEdit(entry)}
+                                  disabled={isLoading || isDeleting === entry.id}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent className="tooltip-content">
+                                <p>Edit</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleDelete(entry.id)}
+                                  disabled={isLoading || isDeleting === entry.id}
+                                >
+                                  {isDeleting === entry.id ? (
+                                    <div className="spinner" />
+                                  ) : (
+                                    <Trash className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent className="tooltip-content">
+                                <p>Delete</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
               </TableBody>
             </Table>
           </div>
@@ -1300,8 +1296,8 @@ const Entries: React.FC = () => {
             <div className="flex items-center space-x-2">
               <p className="text-sm text-muted-foreground">
                 Showing {(currentPage - 1) * entriesPerPage + 1} to{' '}
-                {Math.min(currentPage * entriesPerPage, filteredEntries.length)}{' '}
-                of {filteredEntries.length} entries
+                {Math.min(currentPage * entriesPerPage, filteredEntries.length)} of{' '}
+                {filteredEntries.length} entries
               </p>
             </div>
             <div className="flex items-center space-x-2">
@@ -1351,9 +1347,7 @@ const Entries: React.FC = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {editingEntry ? 'Edit Entry' : 'Add Entry'}
-            </DialogTitle>
+            <DialogTitle>{editingEntry ? 'Edit Entry' : 'Add Entry'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1368,8 +1362,7 @@ const Entries: React.FC = () => {
                 <Label htmlFor="contact">Contact</Label>
                 <Input id="contact" {...register('contact')} />
                 {errors.contact && (
-                  <p className="text-red-600 text-sm">
-                    {errors.contact.message}</p>
+                  <p className="text-red-600 text-sm">{errors.contact.message}</p>
                 )}
               </div>
               <div>
@@ -1407,11 +1400,11 @@ const Entries: React.FC = () => {
                       (entryType === 'Income'
                         ? settings.incomeCategories
                         : settings.expenseCategories)
-                      .map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
-                        </SelectItem>
-                      ))
+                        .map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {cat}
+                          </SelectItem>
+                        ))
                     ) : (
                       <SelectItem value="" disabled>
                         Loading categories...
@@ -1420,9 +1413,7 @@ const Entries: React.FC = () => {
                   </SelectContent>
                 </Select>
                 {errors.category && (
-                  <p className="text-red-600 text-sm">
-                    {errors.category.message}
-                  </p>
+                  <p className="text-red-600 text-sm">{errors.category.message}</p>
                 )}
               </div>
               <div>
@@ -1434,9 +1425,7 @@ const Entries: React.FC = () => {
                   onFocus={handleAmountFocus}
                 />
                 {errors.amount && (
-                  <p className="text-red-600 text-sm">
-                    {errors.amount.message}
-                  </p>
+                  <p className="text-red-600 text-sm">{errors.amount.message}</p>
                 )}
               </div>
               <div>
@@ -1450,19 +1439,14 @@ const Entries: React.FC = () => {
                 <Label htmlFor="renewDate">Renew Date</Label>
                 <Input id="renewDate" type="date" {...register('renewDate')} />
                 {errors.renewDate && (
-                  <p className="text-red-600 text-sm">
-                    {errors.renewDate.message}
-                  </p>
+                  <p className="text-red-600 text-sm">{errors.renewDate.message}</p>
                 )}
               </div>
               <div>
                 <Label htmlFor="renewDateReminder">Renew Date Reminder</Label>
                 <Select
                   onValueChange={(value) =>
-                    setValue(
-                      'renewDateReminder',
-                      Number(value) as 0 | 5 | 10 | 15
-                    )
+                    setValue('renewDateReminder', Number(value) as 0 | 5 | 10 | 15)
                   }
                   value={watch('renewDateReminder')?.toString() || '0'}
                 >
@@ -1477,9 +1461,7 @@ const Entries: React.FC = () => {
                   </SelectContent>
                 </Select>
                 {errors.renewDateReminder && (
-                  <p className="text-red-600 text-sm">
-                    {errors.renewDateReminder.message}
-                  </p>
+                  <p className="text-red-600 text-sm">{errors.renewDateReminder.message}</p>
                 )}
               </div>
               <div>
@@ -1507,9 +1489,7 @@ const Entries: React.FC = () => {
                   </SelectContent>
                 </Select>
                 {errors.property && (
-                  <p className="text-red-600 text-sm">
-                    {errors.property.message}
-                  </p>
+                  <p className="text-red-600 text-sm">{errors.property.message}</p>
                 )}
               </div>
               <div className="sm:col-span-2">
